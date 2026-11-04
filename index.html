@@ -6,8 +6,40 @@
 <meta name="description" content="Material de estudio sobre psicotrauma infantil complejo: seis sesiones, casos ficticios y glosario.">
 <title>Psicotrauma infantil · Estudio</title>
 <link rel="stylesheet" href="assets/style.css">
+<style>
+[hidden] { display: none !important; }
+.entry-screen { max-width: 760px; margin: 0 auto; padding: clamp(24px, 6vw, 64px) 20px; }
+.entry-card { background: var(--surface, #fff); border: 1px solid var(--line, #cad6d2); border-radius: 16px; padding: clamp(22px, 5vw, 40px); }
+.entry-card h1 { font-family: Georgia, serif; font-size: clamp(1.6rem, 5vw, 2.1rem); line-height: 1.25; margin: 0 0 18px; }
+.entry-card p { line-height: 1.65; margin: 0 0 20px; }
+.entry-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.entry-actions .btn { min-height: 48px; white-space: normal; text-align: center; }
+.entry-card :focus-visible { outline: 3px solid var(--accent, #1b5c60); outline-offset: 4px; }
+.entry-status { margin-top: 18px !important; margin-bottom: 0 !important; }
+@media (max-width: 480px) { .entry-actions .btn { width: 100%; } }
+</style>
 </head>
 <body>
+<main id="entry-screen" class="entry-screen" aria-labelledby="entry-title">
+  <section class="entry-card">
+    <h1 id="entry-title" tabindex="-1">Antes de entrar: aviso de contenido sensible</h1>
+    <p id="entry-disclosure">Este material educativo aborda abuso sexual infantil, violencia y trauma. Incluye casos ficticios, sin detalles gráficos, que pueden resultar emocionalmente difíciles. Puedes pausar o salir en cualquier momento; no necesitas compartir experiencias personales. Su finalidad es la formación y no sustituye la atención profesional ni los protocolos de protección.</p>
+    <div class="entry-actions">
+      <button type="button" class="btn primario" id="entry-continue">He leído el aviso y quiero entrar</button>
+      <button type="button" class="btn" id="entry-decline">Ahora no</button>
+    </div>
+    <p id="entry-status" class="entry-status" role="status" aria-live="polite"></p>
+    <noscript><p>Para entrar al material, activa JavaScript y vuelve a cargar la página. Puedes cerrar esta pestaña si prefieres no continuar.</p></noscript>
+  </section>
+</main>
+<main id="exit-screen" class="entry-screen" hidden aria-labelledby="exit-title">
+  <section class="entry-card">
+    <h1 id="exit-title" tabindex="-1">Puedes volver cuando quieras</h1>
+    <p>No has entrado al material. Puedes cerrar esta pestaña.</p>
+    <button type="button" class="btn" id="entry-return">Volver al aviso</button>
+  </section>
+</main>
+<div id="course-content" hidden>
 <a class="skip" href="#app">Saltar al contenido</a>
 <noscript><p class="wrap" style="padding-top:20px">Esta página necesita JavaScript para mostrar las diapositivas y la búsqueda.</p></noscript>
 <header class="top">
@@ -26,7 +58,57 @@
 </div>
 <footer class="wrap pie">Material educativo con casos ficticios y sin detalles gráficos. No sustituye evaluación clínica, protocolos institucionales, supervisión ni asesoría jurídica. Verifica la vigencia de normas y guías antes de aplicarlas.</footer>
 
-<script src="assets/content.js"></script>
-<script src="assets/app.js"></script>
+</div>
+<script>
+(function () {
+  'use strict';
+  const entry = document.getElementById('entry-screen');
+  const exit = document.getElementById('exit-screen');
+  const course = document.getElementById('course-content');
+  const proceed = document.getElementById('entry-continue');
+  const decline = document.getElementById('entry-decline');
+  const status = document.getElementById('entry-status');
+  let started = false;
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = function () { script.remove(); reject(new Error('No se pudo cargar el material')); };
+      document.body.appendChild(script);
+    });
+  }
+  decline.addEventListener('click', function () {
+    entry.hidden = true;
+    exit.hidden = false;
+    document.getElementById('exit-title').focus();
+  });
+  document.getElementById('entry-return').addEventListener('click', function () {
+    exit.hidden = true;
+    entry.hidden = false;
+    document.getElementById('entry-title').focus();
+  });
+  proceed.addEventListener('click', async function () {
+    if (started) return;
+    started = true;
+    proceed.disabled = true;
+    decline.disabled = true;
+    entry.setAttribute('aria-busy', 'true');
+    status.textContent = 'Cargando el material…';
+    try {
+      await loadScript('assets/content.js');
+      await loadScript('assets/app.js');
+      entry.hidden = true;
+      course.hidden = false;
+      document.getElementById('app').focus();
+    } catch (error) {
+      status.textContent = 'No se pudo cargar el material. Vuelve a cargar la página para intentarlo de nuevo.';
+      decline.disabled = false;
+    } finally {
+      entry.removeAttribute('aria-busy');
+    }
+  });
+}());
+</script>
 </body>
 </html>
