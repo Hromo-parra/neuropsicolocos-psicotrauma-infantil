@@ -25,6 +25,11 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;ba
 @media(max-width:880px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.door{border-radius:14px}.door .tag{font-size:.57rem}}
 @media(max-width:530px){header{padding:18px 0 0}.hero{padding-top:28px}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:29px}.door{border-radius:13px;aspect-ratio:.78;padding:8px 4px}.door:before{inset:5px;border-radius:9px}.door .num{font-size:2.2rem}.door .icon{font-size:1.12rem;margin-top:5px}.door .tag{margin-top:5px;font-size:.54rem}.week{font-size:.7rem;letter-spacing:.03em}.panel{padding:19px}.actions{flex-direction:column}.action{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+.tool-actions{display:flex;align-items:center;flex-wrap:wrap;gap:11px}
+.sound-toggle{border:1px solid var(--border);border-radius:999px;background:#ffffff12;color:var(--cream);padding:10px 14px;font-size:.83rem;cursor:pointer;min-height:42px;white-space:nowrap}
+.sound-toggle:hover{border-color:var(--gold);background:#ffffff20}
+.sound-toggle:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+@media(max-width:530px){.tool-actions{width:100%;justify-content:space-between;gap:9px}.sound-toggle{font-size:.78rem}}
 </style>
 </head><body>
 <div class="wrap">
@@ -37,7 +42,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;ba
 </section>
 <div class="notice" id="previewNotice" hidden><strong>Vista editorial activada.</strong> Todas las puertas están visibles para revisión. Para publicar usa la dirección sin <code>?preview=1</code>. Esto no es un sistema de seguridad ni protege spoilers en el código fuente.</div>
 <div class="intro"><span>24 experiencias breves</span><span class="dot"></span><span>Referencias científicas</span><span class="dot"></span><span>Pequeños retos</span></div>
-<div class="toolbar"><h2>Abre la puerta de hoy</h2><span class="counts" id="count"></span></div>
+<div class="toolbar"><h2>Abre la puerta de hoy</h2><div class="tool-actions"><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true" aria-label="Silenciar música al abrir una puerta">🔔 Música al abrir: sí</button><span class="counts" id="count"></span></div></div>
 <main id="calendar" aria-label="Calendario de Adviento"></main>
 <footer class="foot"><div><strong>NeuroPsicoLocos</strong> · Ciencia para mentes curiosas<br>© 2026. Contenido educativo; no sustituye consejo clínico.</div><div>Empieza el <strong>1 de diciembre de 2026</strong>.<br>Zona de desbloqueo: <strong>Ciudad de México</strong> (America/Mexico_City).</div></footer>
 </div>
@@ -51,12 +56,69 @@ const ICONS=['✧','◉','♫','◇','✦','⧉','♡','♪','♬','♧','❋','
 const CAL=document.getElementById('calendar'), modal=document.getElementById('modal'),close=document.getElementById('close');
 let opened=JSON.parse(localStorage.getItem('npl_adviento2026_abiertas')||'[]');
 let active=null,lastFocus=null;
+// Motivo original de celesta y campanas; solo se reproduce tras un toque en una puerta.
+let soundEnabled=true,audioContext=null,activeMusicBus=null;
+try{soundEnabled=localStorage.getItem('npl_adviento2026_sound')!=='off';}catch(e){}
+const soundToggle=document.getElementById('soundToggle');
+function refreshSoundToggle(){
+  soundToggle.setAttribute('aria-pressed',String(soundEnabled));
+  soundToggle.setAttribute('aria-label',soundEnabled?'Silenciar música al abrir una puerta':'Activar música al abrir una puerta');
+  soundToggle.textContent=soundEnabled?'🔔 Música al abrir: sí':'🔕 Música al abrir: no';
+}
+soundToggle.addEventListener('click',()=>{
+  soundEnabled=!soundEnabled;
+  try{localStorage.setItem('npl_adviento2026_sound',soundEnabled?'on':'off');}catch(e){}
+  if(!soundEnabled&&activeMusicBus&&audioContext){
+    const t=audioContext.currentTime;
+    activeMusicBus.gain.cancelScheduledValues(t);
+    activeMusicBus.gain.setTargetAtTime(.0001,t,.025);
+  }
+  refreshSoundToggle();
+});
+refreshSoundToggle();
+function playDoorMusic(){
+  if(!soundEnabled)return;
+  try{
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass)return;
+    const ctx=audioContext||(audioContext=new AudioContextClass());
+    if(ctx.state==='suspended')void ctx.resume().catch(()=>{});
+    const t0=ctx.currentTime+.04;
+    if(activeMusicBus){
+      activeMusicBus.gain.cancelScheduledValues(ctx.currentTime);
+      activeMusicBus.gain.setTargetAtTime(.0001,ctx.currentTime,.025);
+    }
+    const bus=ctx.createGain();
+    bus.gain.value=.72;
+    bus.connect(ctx.destination);
+    activeMusicBus=bus;
+    function bell(frequency,offset,length,volume=1){
+      const t=t0+offset;
+      for(const [partial,amp] of [[1,.11],[2.01,.036],[3.98,.012]]){
+        const osc=ctx.createOscillator(),env=ctx.createGain();
+        osc.type='sine';
+        osc.frequency.setValueAtTime(frequency*partial,t);
+        env.gain.setValueAtTime(.0001,t);
+        env.gain.exponentialRampToValueAtTime(Math.max(.0002,amp*volume),t+.018);
+        env.gain.exponentialRampToValueAtTime(.0001,t+length);
+        osc.connect(env);env.connect(bus);
+        osc.start(t);osc.stop(t+length+.03);
+      }
+    }
+    // Ocho notas, unos 3,9 segundos; sin archivos externos ni reproducción continua.
+    const motif=[[659.25,0,.65],[783.99,.39,.7],[987.77,.78,.7],[1174.66,1.17,.78],
+      [1046.50,1.59,.72],[880,2.0,.72],[783.99,2.42,.78],[659.25,2.82,1.08]];
+    for(const [frequency,offset,length] of motif)bell(frequency,offset,length);
+    bell(329.63,2.82,1.08,.32);
+  }catch(e){/* El calendario sigue funcionando si el navegador no permite audio. */}
+}
+
 function nowParts(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());return Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,+x.value]));}
 function maxDay(){const {year,month,day}=nowParts();if(year<2026||(year===2026&&month<12))return 0;if(year>2026||(year===2026&&month>12))return 24;return Math.min(24,day);}
 const max=maxDay();
 function publicUrl(day){const u=new URL(location.href);u.searchParams.delete('preview');u.searchParams.set('dia',String(day));return /^https?:$/.test(u.protocol)?u.href:'';}
 function postText(d){return `🧠🎄 ADVIENTO NEUROPSICOLOCOS — DÍA ${d.day}/24\n\n✨ ${d.title}\n\n${d.hook}\n\n${d.body}\n\n🔍 Prueba de hoy: ${d.challenge}\n\n📚 ${d.reference}. DOI: ${d.doi}\n\n${publicUrl(d.day)?'🔗 Abre la puerta: '+publicUrl(d.day)+'\n\n':''}NeuroPsicoLocos · Ciencia para mentes curiosas.`;}
-function render(){document.getElementById('previewNotice').hidden=!preview;const {year,month,day}=nowParts();const readable=year===2026&&month===12?'Hoy es '+day+' de diciembre de 2026':year<2026||(year===2026&&month<12)?'Las puertas abren el 1 de diciembre de 2026':'Las 24 puertas ya están disponibles';document.getElementById('dateStatus').innerHTML=(preview?'<strong>Vista editorial</strong> · ': '')+readable;document.getElementById('count').textContent=preview?'24 puertas revisables':max+' de 24 puertas disponibles';CAL.replaceChildren();const groups=[['I · El cerebro que nos engaña',0,6],['II · Cerebro emocional y musical',6,12],['III · Neurociencia sorprendente',12,18],['IV · Tiempo, mente y recuerdos',18,24]];for(const [label,start,end] of groups){const heading=document.createElement('div');heading.className='week';heading.textContent=label;CAL.append(heading);const grid=document.createElement('div');grid.className='grid';for(let i=start;i<end;i++){const d=days[i],enabled=preview||d.day<=max,wasOpened=opened.includes(d.day);const b=document.createElement('button');b.type='button';b.className='door '+(enabled?'':'locked ')+(wasOpened?'opened ':'')+(!preview&&d.day===max?'current':'');b.innerHTML=`<span class="num">${String(d.day).padStart(2,'0')}</span><span class="icon" aria-hidden="true">${enabled?ICONS[i]:'♢'}</span><span class="tag">${enabled?wasOpened?'Leída':'Abrir puerta':'Cerrada'}</span>`;b.setAttribute('aria-label',`Día ${d.day}: ${enabled?d.title:'cerrado hasta el '+d.day+' de diciembre'}`);b.setAttribute('aria-disabled',enabled?'false':'true');b.onclick=()=>enabled?openDay(d.day):lockDay(d.day);grid.append(b);}CAL.append(grid);}}
+function render(){document.getElementById('previewNotice').hidden=!preview;const {year,month,day}=nowParts();const readable=year===2026&&month===12?'Hoy es '+day+' de diciembre de 2026':year<2026||(year===2026&&month<12)?'Las puertas abren el 1 de diciembre de 2026':'Las 24 puertas ya están disponibles';document.getElementById('dateStatus').innerHTML=(preview?'<strong>Vista editorial</strong> · ': '')+readable;document.getElementById('count').textContent=preview?'24 puertas revisables':max+' de 24 puertas disponibles';CAL.replaceChildren();const groups=[['I · El cerebro que nos engaña',0,6],['II · Cerebro emocional y musical',6,12],['III · Neurociencia sorprendente',12,18],['IV · Tiempo, mente y recuerdos',18,24]];for(const [label,start,end] of groups){const heading=document.createElement('div');heading.className='week';heading.textContent=label;CAL.append(heading);const grid=document.createElement('div');grid.className='grid';for(let i=start;i<end;i++){const d=days[i],enabled=preview||d.day<=max,wasOpened=opened.includes(d.day);const b=document.createElement('button');b.type='button';b.className='door '+(enabled?'':'locked ')+(wasOpened?'opened ':'')+(!preview&&d.day===max?'current':'');b.innerHTML=`<span class="num">${String(d.day).padStart(2,'0')}</span><span class="icon" aria-hidden="true">${enabled?ICONS[i]:'♢'}</span><span class="tag">${enabled?wasOpened?'Leída':'Abrir puerta':'Cerrada'}</span>`;b.setAttribute('aria-label',`Día ${d.day}: ${enabled?d.title:'cerrado hasta el '+d.day+' de diciembre'}`);b.setAttribute('aria-disabled',enabled?'false':'true');b.onclick=()=>{if(enabled){playDoorMusic();openDay(d.day);}else{lockDay(d.day);}};grid.append(b);}CAL.append(grid);}}
 function lockDay(day){document.getElementById('dateStatus').textContent='La puerta '+day+' se abre el '+day+' de diciembre de 2026';window.scrollTo({top:0,behavior:'smooth'});}
 function openDay(day){const d=days[day-1];if(!d||(!preview&&day>max))return;lastFocus=document.activeElement;active=d;document.getElementById('modalKicker').textContent='PUERTA '+String(day).padStart(2,'0')+' / 24 · '+d.category;document.getElementById('modalTitle').textContent=d.title;document.getElementById('story').textContent=d.body;document.getElementById('challenge').textContent=d.challenge;const doi=document.createElement('a');doi.href='https://doi.org/'+encodeURIComponent(d.doi).replaceAll('%2F','/');doi.target='_blank';doi.rel='noopener noreferrer';doi.textContent='https://doi.org/'+d.doi;const source=document.getElementById('source');source.replaceChildren(document.createTextNode('Referencia: '+d.reference+' · DOI: '),doi);document.getElementById('toast').textContent='';modal.hidden=false;document.body.classList.add('modal-open');document.getElementById('panel').focus();if(!opened.includes(day)){opened.push(day);try{localStorage.setItem('npl_adviento2026_abiertas',JSON.stringify(opened));}catch(e){}render();}}
 function hideModal(){modal.hidden=true;document.body.classList.remove('modal-open');active=null;if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
