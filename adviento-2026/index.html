@@ -30,6 +30,11 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;ba
 .sound-toggle:hover{border-color:var(--gold);background:#ffffff20}
 .sound-toggle:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
 @media(max-width:530px){.tool-actions{width:100%;justify-content:space-between;gap:9px}.sound-toggle{font-size:.78rem}}
+.sound-test{border:1px solid var(--border);border-radius:999px;background:#f5cf81;color:#152c30;padding:10px 13px;font-size:.83rem;font-weight:750;cursor:pointer;min-height:42px;white-space:nowrap}
+.sound-test:hover{filter:brightness(1.08)}
+.sound-test:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.sound-status{display:block;width:100%;min-height:1.1em;color:var(--teal);font-size:.78rem}
+@media(max-width:530px){.sound-test{font-size:.78rem}}
 </style>
 </head><body>
 <div class="wrap">
@@ -42,11 +47,11 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;ba
 </section>
 <div class="notice" id="previewNotice" hidden><strong>Vista editorial activada.</strong> Todas las puertas están visibles para revisión. Para publicar usa la dirección sin <code>?preview=1</code>. Esto no es un sistema de seguridad ni protege spoilers en el código fuente.</div>
 <div class="intro"><span>24 experiencias breves</span><span class="dot"></span><span>Referencias científicas</span><span class="dot"></span><span>Pequeños retos</span></div>
-<div class="toolbar"><h2>Abre la puerta de hoy</h2><div class="tool-actions"><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true" aria-label="Silenciar música al abrir una puerta">🔔 Música al abrir: sí</button><span class="counts" id="count"></span></div></div>
+<div class="toolbar"><h2>Abre la puerta de hoy</h2><div class="tool-actions"><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true" aria-label="Silenciar música al abrir una puerta">🔔 Música al abrir: sí</button><button id="soundTest" class="sound-test" type="button">▶ Probar sonido</button><span id="soundStatus" class="sound-status" role="status" aria-live="polite"></span><span class="counts" id="count"></span></div></div>
 <main id="calendar" aria-label="Calendario de Adviento"></main>
 <footer class="foot"><div><strong>NeuroPsicoLocos</strong> · Ciencia para mentes curiosas<br>© 2026. Contenido educativo; no sustituye consejo clínico.</div><div>Empieza el <strong>1 de diciembre de 2026</strong>.<br>Zona de desbloqueo: <strong>Ciudad de México</strong> (America/Mexico_City).</div></footer>
 </div>
-<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="panel" tabindex="-1" id="panel"><div class="head"><div class="kicker" id="modalKicker"></div><button class="close" id="close" type="button" aria-label="Cerrar puerta">×</button></div><h2 id="modalTitle"></h2><div class="story" id="story"></div><div class="info"><strong>Tu microexperimento</strong><div id="challenge"></div></div><div class="source" id="source"></div><div class="actions"><button class="action" id="share" type="button">Compartir por WhatsApp</button><button class="action secondary" id="copy" type="button">Copiar publicación</button></div><div class="toast" id="toast" aria-live="polite"></div></div></div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="panel" tabindex="-1" id="panel"><div class="head"><div class="kicker" id="modalKicker"></div><button class="close" id="close" type="button" aria-label="Cerrar puerta">×</button></div><h2 id="modalTitle"></h2><div class="story" id="story"></div><div class="info"><strong>Tu microexperimento</strong><div id="challenge"></div></div><div class="source" id="source"></div><div class="actions"><button class="action secondary" id="replayMusic" type="button">🎶 Escuchar campanillas</button><button class="action" id="share" type="button">Compartir por WhatsApp</button><button class="action secondary" id="copy" type="button">Copiar publicación</button></div><div class="toast" id="toast" aria-live="polite"></div></div></div>
 <script>
 'use strict';
 const days=[{"day": 1, "title": "Tu cerebro predice antes de ver", "category": "Percepción y memoria", "body": "No recibimos el mundo como una cámara: interpretamos señales sensoriales a la luz del contexto y las expectativas. Los modelos de codificación predictiva proponen que las redes comparan predicciones con información entrante. Es un marco teórico influyente, no una explicación única de toda percepción.", "challenge": "Piensa en una palabra ambigua y léela en dos frases distintas: observa cómo cambia la interpretación.", "reference": "Rao y Ballard, 1999", "doi": "10.1038/4580", "hook": "Una predicción puede cambiar lo que creemos ver."}, {"day": 2, "title": "El gorila que nadie vio", "category": "Percepción y memoria", "body": "Cuando nos concentramos intensamente en una tarea, podemos no advertir un acontecimiento inesperado y muy visible. La ceguera por falta de atención demuestra límites sorprendentes de la selección atencional.", "challenge": "Durante treinta segundos observa tu habitación y cuenta solo los objetos azules. Después, sin mirar, intenta recordar cuántos eran rojos.", "reference": "Simons y Chabris, 1999", "doi": "10.1068/p281059", "hook": "Estar mirando no garantiza estar viendo."}, {"day": 3, "title": "¿Oyes con los ojos?", "category": "Percepción y memoria", "body": "En el efecto McGurk, una sílaba auditiva combinada con movimientos labiales incongruentes puede producir la percepción de otra sílaba. El habla es una experiencia multisensorial.", "challenge": "Observa a alguien pronunciar en silencio «pa», «ma» y «fa» e intenta identificarlas por sus labios. No es una prueba diagnóstica.", "reference": "McGurk y MacDonald, 1976", "doi": "10.1038/264746a0", "hook": "Nuestros ojos pueden alterar lo que escuchamos."}, {"day": 4, "title": "Recuerdos que nunca ocurrieron", "category": "Percepción y memoria", "body": "En el paradigma de falsas memorias DRM, las personas a veces recuerdan una palabra relacionada que nunca se presentó. Recordar es reconstruir, no reproducir una grabación perfecta.", "challenge": "Lee «cama, almohada, cansancio, descanso, pijama». Espera un minuto y escribe qué palabras recuerdas. ¿Aparece «sueño», aunque no estaba?", "reference": "Roediger y McDermott, 1995", "doi": "10.1037/0278-7393.21.4.803", "hook": "Una memoria convincente no siempre es exacta."}, {"day": 5, "title": "Una palabra cambia tu recuerdo", "category": "Percepción y memoria", "body": "La manera de formular una pregunta puede alterar estimaciones y recuerdos posteriores. En un estudio clásico sobre accidentes, los verbos utilizados influyeron en las respuestas de los participantes.", "challenge": "Compara «¿a qué velocidad chocaron?» con «¿a qué velocidad se estrellaron violentamente?». ¿Qué sugiere cada redacción?", "reference": "Loftus y Palmer, 1974", "doi": "10.1016/S0022-5371(74)80011-3", "hook": "Las preguntas también modelan nuestros recuerdos."}, {"day": 6, "title": "La memoria de trabajo no es una bodega", "category": "Percepción y memoria", "body": "La memoria de trabajo sostiene y manipula temporalmente información necesaria para razonar, aprender o comprender. Su capacidad es limitada y depende de las demandas de la tarea.", "challenge": "Memoriza 6-2-9-4 y repítelos en orden inverso. Después inténtalo mientras haces otra tarea verbal sencilla.", "reference": "Baddeley, 1992", "doi": "10.1126/science.1736359", "hook": "Pensar implica mantener y transformar información."}, {"day": 7, "title": "¿Por qué recordamos lo que nos conmueve?", "category": "Emoción, música y vínculos", "body": "La activación emocional puede modular la consolidación de la memoria. La amígdala contribuye a este proceso, aunque los recuerdos emocionales no son necesariamente más precisos.", "challenge": "Elige un recuerdo alegre e identifica qué detalle sensorial destaca: un sonido, olor o lugar.", "reference": "McGaugh, 2004", "doi": "10.1146/annurev.neuro.27.070203.144157", "hook": "Emoción y memoria interactúan, pero no son lo mismo."}, {"day": 8, "title": "La música puede erizarnos la piel", "category": "Emoción, música y vínculos", "body": "Estudios de neuroimagen asociaron los escalofríos musicales intensos con actividad en circuitos de recompensa, emoción y motivación. No existe una sola «zona musical» en el cerebro.", "challenge": "Escucha veinte segundos de una pieza que te emocione y observa si aparecen escalofríos o cambios en tu respiración.", "reference": "Blood y Zatorre, 2001", "doi": "10.1073/pnas.191355898", "hook": "Una melodía puede activar sistemas de recompensa."}, {"day": 9, "title": "La emoción empieza antes del clímax", "category": "Emoción, música y vínculos", "body": "En un estudio con PET, la anticipación y el punto máximo de emoción musical se asociaron con liberación dopaminérgica en regiones estriatales diferenciadas. La dopamina no es simplemente «la molécula del placer».", "challenge": "Escucha una canción conocida y detecta el instante en que anticipas su parte favorita.", "reference": "Salimpoor y cols., 2011", "doi": "10.1038/nn.2726", "hook": "La expectativa forma parte del placer musical."}, {"day": 10, "title": "¿Por qué duele quedarse fuera?", "category": "Emoción, música y vínculos", "body": "Un experimento de exclusión social encontró actividad cerebral relacionada con el malestar de ser excluido. Algunas redes se solapan con las del dolor físico, pero ambos fenómenos no son idénticos.", "challenge": "Hoy, si te apetece, envía un mensaje amable a alguien con quien no has hablado en mucho tiempo.", "reference": "Eisenberger y cols., 2003", "doi": "10.1126/science.1089134", "hook": "Ser incluidos importa a nuestro cerebro social."}, {"day": 11, "title": "La nostalgia tiene una función", "category": "Emoción, música y vínculos", "body": "La nostalgia no es solo tristeza por el pasado: estudios experimentales han observado que puede aumentar el sentimiento de conexión social y el afecto positivo, con variabilidad individual.", "challenge": "Escoge una fotografía antigua y escribe qué personas o vínculos aparecen en ese recuerdo.", "reference": "Wildschut y cols., 2006", "doi": "10.1037/0022-3514.91.5.975", "hook": "Recordar el pasado también puede acercarnos a otros."}, {"day": 12, "title": "Un recuerdo contra la soledad", "category": "Emoción, música y vínculos", "body": "Algunos estudios sugieren que evocar experiencias nostálgicas puede restaurar temporalmente la percepción de apoyo social. No reemplaza los vínculos reales ni la atención profesional cuando hace falta.", "challenge": "Dedica un minuto a recordar un momento en que alguien te hizo sentir acompañado.", "reference": "Zhou y cols., 2008", "doi": "10.1111/j.1467-9280.2008.02194.x", "hook": "A veces un recuerdo nos devuelve sensación de pertenencia."}, {"day": 13, "title": "ACHOO: ¿estornudas con la luz?", "category": "Neurociencia sorprendente", "body": "El reflejo fótico del estornudo ocurre en algunas personas ante cambios de iluminación intensa. Sus mecanismos neurales no están plenamente establecidos; investigaciones EEG han identificado diferencias de respuesta visual y somatosensorial.", "challenge": "Pregunta a familiares si les sucede. No mires al sol ni a fuentes de luz intensa para provocarlo.", "reference": "Langer y cols., 2010", "doi": "10.1371/journal.pone.0009208", "hook": "No todo estornudo empieza en la nariz."}, {"day": 14, "title": "Los genes también participan en ACHOO", "category": "Neurociencia sorprendente", "body": "Los estudios de asociación genómica identifican variantes vinculadas al reflejo fótico del estornudo. No se trata de un único gen determinista; las estimaciones de prevalencia varían entre poblaciones y métodos.", "challenge": "Haz una pequeña encuesta familiar voluntaria: ¿quién recuerda haber estornudado al salir a la luz? No es una prueba genética.", "reference": "Wang y cols., 2019", "doi": "10.1038/s41598-019-41551-0", "hook": "Una rareza cotidiana revela variación biológica."}, {"day": 15, "title": "Purkinje: neuronas que aprenden el tiempo", "category": "Neurociencia sorprendente", "body": "Las células de Purkinje participan en el procesamiento cerebeloso. Un estudio experimental mostró respuestas temporalmente aprendidas en estas neuronas durante condicionamiento, aportando evidencia sobre circuitos de temporización.", "challenge": "Golpea suavemente una mesa a intervalos regulares durante diez segundos; después intenta mantener el ritmo sin referencia externa.", "reference": "Johansson y cols., 2014", "doi": "10.1073/pnas.1415371111", "hook": "El cerebelo participa en la precisión temporal."}, {"day": 16, "title": "Tu cerebro no tiene un solo ritmo", "category": "Neurociencia sorprendente", "body": "Las redes neuronales muestran oscilaciones en múltiples escalas temporales. Su papel depende del circuito, del estado y de la tarea: ninguna banda de frecuencia equivale por sí sola a un estado mental específico.", "challenge": "Pon atención al contraste entre el ritmo de la música, tu respiración y los movimientos de tus dedos.", "reference": "Buzsáki y Draguhn, 2004", "doi": "10.1126/science.1099745", "hook": "Los ritmos neuronales coordinan actividad, no pensamientos mágicos."}, {"day": 17, "title": "Aprender cambia conexiones", "category": "Neurociencia sorprendente", "body": "La investigación sobre plasticidad sináptica ha descrito mecanismos por los que la experiencia modifica la eficacia de conexiones neuronales. Aprender no significa necesariamente crear neuronas nuevas.", "challenge": "Practica durante dos minutos una secuencia de dedos que nunca hayas realizado. Repite mañana y compara la facilidad subjetiva.", "reference": "Kandel, 2001", "doi": "10.1126/science.1067020", "hook": "La experiencia deja huellas biológicas."}, {"day": 18, "title": "Dormir también es aprender", "category": "Neurociencia sorprendente", "body": "El sueño contribuye a distintos procesos de consolidación y reorganización de recuerdos. Sus efectos dependen del tipo de aprendizaje y de la arquitectura del sueño.", "challenge": "Antes de dormir, repasa tres conceptos aprendidos hoy. Mañana intenta recuperarlos sin consultar apuntes.", "reference": "Rasch y Born, 2013", "doi": "10.1152/physrev.00032.2012", "hook": "Dormir no es apagar el cerebro."}, {"day": 19, "title": "¿Dónde vive el reloj de los segundos?", "category": "Tiempo, mente y recuerdos", "body": "La percepción de intervalos depende de varios circuitos, incluidos ganglios basales, corteza y cerebelo. No existe un solo reloj cerebral que explique todas las escalas temporales.", "challenge": "Sin usar reloj, cierra los ojos y estima cuándo han pasado veinte segundos. Después compáralo con un cronómetro.", "reference": "Buhusi y Meck, 2005", "doi": "10.1038/nrn1764", "hook": "El tiempo mental se construye con múltiples mecanismos."}, {"day": 20, "title": "Por qué un minuto puede durar una eternidad", "category": "Tiempo, mente y recuerdos", "body": "La atención, el aburrimiento y el contexto pueden alterar nuestra estimación de la duración. El tiempo subjetivo no equivale exactamente al tiempo físico.", "challenge": "Compara tu estimación de treinta segundos durante una tarea aburrida y durante una conversación interesante.", "reference": "Danckert y Allman, 2005", "doi": "10.1016/j.bandc.2005.07.002", "hook": "El reloj no cambia; nuestra experiencia sí."}, {"day": 21, "title": "Sentir lo que ves: tacto espejo", "category": "Tiempo, mente y recuerdos", "body": "En la sinestesia de tacto espejo, algunas personas reportan sensaciones táctiles al observar que otra persona recibe un contacto. No debe confundirse con la empatía ordinaria.", "challenge": "Piensa cómo tu cuerpo reacciona cuando ves que alguien tropieza. Una reacción corporal no prueba sinestesia.", "reference": "Ward y Banissy, 2015", "doi": "10.1080/17588928.2015.1042444", "hook": "Percibir a otros también involucra representaciones corporales."}, {"day": 22, "title": "Cuando descansas, el cerebro sigue activo", "category": "Tiempo, mente y recuerdos", "body": "La actividad cerebral no desaparece durante el reposo. Estudios sobre el modo por defecto describieron patrones organizados de actividad basal y cambios durante tareas orientadas a metas.", "challenge": "Dedica treinta segundos a estar en silencio y observa espontáneamente a dónde se dirige tu pensamiento.", "reference": "Raichle y cols., 2001", "doi": "10.1073/pnas.98.2.676", "hook": "El reposo no es ausencia de actividad."}, {"day": 23, "title": "Para imaginar el futuro usamos el pasado", "category": "Tiempo, mente y recuerdos", "body": "Personas con lesión hipocampal bilateral pueden tener dificultades para construir escenas futuras coherentes. Esto vincula mecanismos de memoria episódica e imaginación, sin afirmar que dependan exclusivamente del hipocampo.", "challenge": "Imagina una celebración dentro de cinco años: ¿qué lugar, voces y detalles espaciales logras construir?", "reference": "Hassabis y cols., 2007", "doi": "10.1073/pnas.0610561104", "hook": "Recordar e imaginar comparten herramientas neurales."}, {"day": 24, "title": "El regalo imperfecto de la memoria", "category": "Tiempo, mente y recuerdos", "body": "Al reactivar un recuerdo, puede integrarse información nueva bajo ciertas condiciones. La reconsolidación es un campo activo y no implica que todos los recuerdos se reescriban cada vez que pensamos en ellos.", "challenge": "Escribe una memoria valiosa de este año: un hecho, una emoción y una pregunta que todavía tengas. Consérvala para diciembre próximo.", "reference": "Hupbach y cols., 2007", "doi": "10.1101/lm.365707", "hook": "No recordamos para conservar cada detalle: también para dar sentido."}];
@@ -56,62 +61,93 @@ const ICONS=['✧','◉','♫','◇','✦','⧉','♡','♪','♬','♧','❋','
 const CAL=document.getElementById('calendar'), modal=document.getElementById('modal'),close=document.getElementById('close');
 let opened=JSON.parse(localStorage.getItem('npl_adviento2026_abiertas')||'[]');
 let active=null,lastFocus=null;
-// Motivo original de celesta y campanas; solo se reproduce tras un toque en una puerta.
-let soundEnabled=true,audioContext=null,activeMusicBus=null;
+// Melodía original navideña: un WAV local generado al cargar la página (sin descargas).
+// HTMLAudioElement ofrece mayor compatibilidad con Safari/iPhone que los osciladores Web Audio.
+let soundEnabled=true, doorAudio=null;
 try{soundEnabled=localStorage.getItem('npl_adviento2026_sound')!=='off';}catch(e){}
 const soundToggle=document.getElementById('soundToggle');
+const soundStatus=document.getElementById('soundStatus');
 function refreshSoundToggle(){
   soundToggle.setAttribute('aria-pressed',String(soundEnabled));
   soundToggle.setAttribute('aria-label',soundEnabled?'Silenciar música al abrir una puerta':'Activar música al abrir una puerta');
   soundToggle.textContent=soundEnabled?'🔔 Música al abrir: sí':'🔕 Música al abrir: no';
 }
-soundToggle.addEventListener('click',()=>{
-  soundEnabled=!soundEnabled;
-  try{localStorage.setItem('npl_adviento2026_sound',soundEnabled?'on':'off');}catch(e){}
-  if(!soundEnabled&&activeMusicBus&&audioContext){
-    const t=audioContext.currentTime;
-    activeMusicBus.gain.cancelScheduledValues(t);
-    activeMusicBus.gain.setTargetAtTime(.0001,t,.025);
+function wavForDoor(){
+  const sampleRate=22050,duration=3.95,N=Math.round(sampleRate*duration);
+  const signal=new Float32Array(N);
+  // Motivo compuesto para NeuroPsicoLocos; campanillas de celesta con armónicos amortiguados.
+  const notes=[[659.25,0,.63],[783.99,.38,.69],[987.77,.78,.72],[1174.66,1.17,.80],
+    [1046.50,1.60,.77],[880,2.02,.76],[783.99,2.43,.77],[659.25,2.84,1.05]];
+  for(const [frequency,onset,length] of notes){
+    const first=Math.round(onset*sampleRate);
+    const count=Math.min(Math.round(length*sampleRate),N-first);
+    for(let k=0;k<count;k++){
+      const t=k/sampleRate;
+      const envelope=(1-Math.exp(-125*t))*Math.exp(-3.1*t/length);
+      const shimmer=Math.sin(2*Math.PI*frequency*t)*.72+
+        Math.sin(2*Math.PI*frequency*2.01*t)*.20+
+        Math.sin(2*Math.PI*frequency*3.96*t)*.08;
+      signal[first+k]+=envelope*shimmer*.32;
+    }
   }
-  refreshSoundToggle();
-});
-refreshSoundToggle();
+  let peak=0;
+  for(const x of signal)peak=Math.max(peak,Math.abs(x));
+  const gain=peak>0?.72/peak:1;
+  const bytes=new ArrayBuffer(44+N*2),view=new DataView(bytes);
+  function name(i,s){for(let j=0;j<s.length;j++)view.setUint8(i+j,s.charCodeAt(j));}
+  name(0,'RIFF');view.setUint32(4,36+N*2,true);name(8,'WAVE');
+  name(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);
+  view.setUint16(22,1,true);view.setUint32(24,sampleRate,true);
+  view.setUint32(28,sampleRate*2,true);view.setUint16(32,2,true);
+  view.setUint16(34,16,true);name(36,'data');view.setUint32(40,N*2,true);
+  for(let i=0;i<N;i++){
+    const fade=Math.min(1,(N-i)/(sampleRate*.18));
+    const value=Math.max(-1,Math.min(1,signal[i]*gain*fade));
+    view.setInt16(44+i*2,Math.round(value*32767),true);
+  }
+  return new Blob([bytes],{type:'audio/wav'});
+}
+function prepareDoorAudio(){
+  if(doorAudio)return;
+  doorAudio=document.createElement('audio');
+  doorAudio.preload='auto';
+  doorAudio.setAttribute('playsinline','');
+  doorAudio.src=URL.createObjectURL(wavForDoor());
+  doorAudio.volume=1;
+  doorAudio.addEventListener('error',()=>{soundStatus.textContent='El navegador no pudo cargar el sonido.';});
+  document.body.append(doorAudio);
+}
 function playDoorMusic(){
   if(!soundEnabled)return;
   try{
-    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
-    if(!AudioContextClass)return;
-    const ctx=audioContext||(audioContext=new AudioContextClass());
-    if(ctx.state==='suspended')void ctx.resume().catch(()=>{});
-    const t0=ctx.currentTime+.04;
-    if(activeMusicBus){
-      activeMusicBus.gain.cancelScheduledValues(ctx.currentTime);
-      activeMusicBus.gain.setTargetAtTime(.0001,ctx.currentTime,.025);
+    prepareDoorAudio();
+    doorAudio.pause();
+    try{doorAudio.currentTime=0;}catch(e){}
+    const playback=doorAudio.play(); // Debe invocarse directamente desde el gesto del usuario.
+    if(playback&&typeof playback.catch==='function'){
+      playback.then(()=>{soundStatus.textContent='';}).catch(()=>{
+        soundStatus.textContent='El navegador bloqueó el audio. Prueba en Safari, con el volumen multimedia activado.';
+      });
     }
-    const bus=ctx.createGain();
-    bus.gain.value=.72;
-    bus.connect(ctx.destination);
-    activeMusicBus=bus;
-    function bell(frequency,offset,length,volume=1){
-      const t=t0+offset;
-      for(const [partial,amp] of [[1,.11],[2.01,.036],[3.98,.012]]){
-        const osc=ctx.createOscillator(),env=ctx.createGain();
-        osc.type='sine';
-        osc.frequency.setValueAtTime(frequency*partial,t);
-        env.gain.setValueAtTime(.0001,t);
-        env.gain.exponentialRampToValueAtTime(Math.max(.0002,amp*volume),t+.018);
-        env.gain.exponentialRampToValueAtTime(.0001,t+length);
-        osc.connect(env);env.connect(bus);
-        osc.start(t);osc.stop(t+length+.03);
-      }
-    }
-    // Ocho notas, unos 3,9 segundos; sin archivos externos ni reproducción continua.
-    const motif=[[659.25,0,.65],[783.99,.39,.7],[987.77,.78,.7],[1174.66,1.17,.78],
-      [1046.50,1.59,.72],[880,2.0,.72],[783.99,2.42,.78],[659.25,2.82,1.08]];
-    for(const [frequency,offset,length] of motif)bell(frequency,offset,length);
-    bell(329.63,2.82,1.08,.32);
-  }catch(e){/* El calendario sigue funcionando si el navegador no permite audio. */}
+  }catch(e){soundStatus.textContent='No fue posible reproducir el sonido en este navegador.';}
 }
+soundToggle.addEventListener('click',()=>{
+  soundEnabled=!soundEnabled;
+  try{localStorage.setItem('npl_adviento2026_sound',soundEnabled?'on':'off');}catch(e){}
+  if(!soundEnabled&&doorAudio)doorAudio.pause();
+  soundStatus.textContent=soundEnabled?'Sonido activado. Pulsa «Probar sonido».':'Sonido silenciado.';
+  refreshSoundToggle();
+});
+document.getElementById('soundTest').addEventListener('click',()=>{
+  if(!soundEnabled){soundEnabled=true;refreshSoundToggle();try{localStorage.setItem('npl_adviento2026_sound','on');}catch(e){}}
+  playDoorMusic();
+});
+document.getElementById('replayMusic').addEventListener('click',()=>{
+  if(!soundEnabled){soundEnabled=true;refreshSoundToggle();try{localStorage.setItem('npl_adviento2026_sound','on');}catch(e){}}
+  playDoorMusic();
+});
+refreshSoundToggle();
+prepareDoorAudio();
 
 function nowParts(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());return Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,+x.value]));}
 function maxDay(){const {year,month,day}=nowParts();if(year<2026||(year===2026&&month<12))return 0;if(year>2026||(year===2026&&month>12))return 24;return Math.min(24,day);}
